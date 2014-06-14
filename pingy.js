@@ -42,8 +42,22 @@
    * @param {Number} y - y coordinate
    * @return {Number} index of coordinate in an image buffer
    */
-  var getIndex = function(width, x, y) {
+  var get_index = function(width, x, y) {
     return (width * y + x) << 2;
+  };
+
+  /**
+   * Get a random color
+   *
+   * @return {Object} RGBA value
+   */
+  var random_rgba = function() {
+    return {
+      r: Math.floor(Math.random() * 256),
+      g: Math.floor(Math.random() * 256),
+      b: Math.floor(Math.random() * 256),
+      a: 255
+    };
   };
 
   /**
@@ -94,6 +108,28 @@
     });
   };
 
+  /**
+   * Create a Pingy object from ASCII art
+   *
+   * Unmapped colors are assigned a random color (per character)
+   *
+   * @param {String} art - ASCII art
+   * @param {Object} map - map of characters to RGBA values
+   * @return {Pingy}
+   */
+  Pingy.fromAsciiArt = function(art, map) {
+    map = map || {};
+
+    var arr = art.split('\n').map(function(row) {
+      return row.split('').map(function(c) {
+        if (!map[c]) { map[c] = random_rgba(); }
+        return map[c];
+      });
+    });
+
+    return Pingy.fromArray(arr);
+  };
+
   Pingy.prototype = {
 
     /**
@@ -105,7 +141,7 @@
      * @return {Number} index of coordinate in image buffer
      */
     _getIndex: function(x, y) {
-      return getIndex(this._png.width, x, y);
+      return get_index(this._png.width, x, y);
     },
 
     /**
@@ -203,7 +239,7 @@
       for (var y = 0; y < height; y++) {
         for (var x = 0; x < width; x++) {
 
-          var i = getIndex(width, x, y);
+          var i = get_index(width, x, y);
           var rgba = this.getColor(to_int(x / factor), to_int(y / factor));
 
           buf[i + 0] = rgba.r;
