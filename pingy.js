@@ -24,33 +24,61 @@
   };
 
   /**
+   * Get an image buffer for a given width and height
+   *
+   * @param {Number} width - image width
+   * @param {Number} height - image height
+   * @return {Buffer}
+   */
+  var buf = function(width, height) {
+    return new Buffer(width * height * 4); // RGBA
+  };
+
+  /**
    * Pingy constructor
    *
-   * Can be of forms:
-   *   Pingy(width, height) to create a new image
-   *   Pingy(PNG) to create a Pingy object from an existing pngjs object
-   *
-   * @param {Number|PNG} [width] - image width or pngjs object
+   * @param {Number} [width] - image width
    * @param {Number} [height] - image height
    * @return {Pingy}
    */
   var Pingy = function(width, height) {
-    width = width || 0;
-    height = height || 0;
-
-    if (arguments[0] instanceof PNG) {
-      this._png = arguments[0];
-      return;
-    }
+    width = clamp(width, 1);
+    height = clamp(height, 1);
 
     this._png = new PNG();
     this._png.width = width;
     this._png.height = height;
 
-    this._png.data = new Buffer(width * height * 4); // RGBA
+    this._png.data = buf(width, height);
 
     this.forEachPoint(function(x, y, rgba) {
       return { r:0, g:0, b:0, a:255 };
+    });
+  };
+
+  /**
+   * Create a Pingy object from an existing pngjs object
+   *
+   * @param {PNG} png - pngjs object
+   * @return {Pingy}
+   */
+  Pingy.fromPNG = function(png) {
+    var self = new Pingy();
+    self._png = png;
+    return self;
+  };
+
+  /**
+   * Create a Pingy object from an array of points
+   *
+   * @param {PNG} arr - 2-dimensional array of RGBA values
+   * @return {Pingy}
+   */
+  Pingy.fromArray = function(arr) {
+    var self = new Pingy(arr[0].length, arr.length);
+
+    return self.forEachPoint(function(x, y, rgba) {
+      return arr[y][x];
     });
   };
 
@@ -77,10 +105,11 @@
      * If the callback returns an object, it will be used as the new rgba value
      *
      * @param {Function} fn - Function(x, y, rgba) to execute
+     * @return {Pingy} self
      */
     forEachPoint: function(fn) {
-      for (var x = 0; x < this._png.width; x++) {
-        for (var y = 0; y < this._png.height; y++) {
+      for (var y = 0; y < this._png.height; y++) {
+        for (var x = 0; x < this._png.width; x++) {
 
           var rgba = this.getColor(x, y);
           var out = fn(x, y, rgba);
@@ -88,6 +117,8 @@
           this.setColor(x, y, (out || rgba));
         }
       }
+
+      return this;
     },
 
     /**
