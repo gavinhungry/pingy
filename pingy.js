@@ -8,7 +8,9 @@
 (function() {
   'use strict';
 
+
   var PNG = require('pngjs').PNG;
+  var Stream = require('stream');
   var _ = require('lodash');
 
   var pingy = module.exports;
@@ -25,10 +27,10 @@
     img.width = width;
     img.height = height;
 
-    img.data = new Buffer(width * height * 4); // rgba
+    img.data = new Buffer(width * height * 4, 'utf8'); // rgba
 
     pingy.each_point(img, function(x, y, rgba) {
-      return { r:0, g:0, b:0, a:255 };
+      return { r:0, g:255, b:0, a:255 };
     });
 
     return img;
@@ -107,6 +109,40 @@
     img.data[i + 3] = _.isNumber(rgba.a) ? rgba.a : prev.a;
 
     return pingy.get_rgba(img, x, y);
+  };
+
+  /**
+   * Get the base64 encoding of an image
+   *
+   * @param {PNG} img - input image
+   * @param {Function} fn - callback
+   */
+  pingy.to_base64 = function(img, fn) {
+    var buffers = [];
+
+    var stream = new Stream();
+    stream.readable = stream.writable = true;
+    stream.write = function(data) {
+      buffers.push(data);
+    }
+
+    stream.end = function() {
+      fn(Buffer.concat(buffers).toString('base64'));
+    }
+
+    img.pack().pipe(stream);
+  };
+
+  /**
+   * Get the base64 encoding of an image as a data URI
+   *
+   * @param {PNG} img - input image
+   * @param {Function} fn - callback
+   */
+  pingy.to_base64_uri = function(img, fn) {
+    return pingy.to_base64(img, function(base64) {
+      fn('data:image/png;base64,' + base64);
+    });
   };
 
 })();
