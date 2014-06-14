@@ -30,8 +30,20 @@
    * @param {Number} height - image height
    * @return {Buffer}
    */
-  var buf = function(width, height) {
+  var buffer = function(width, height) {
     return new Buffer(width * height * 4); // RGBA
+  };
+
+  /**
+   * Get the buffer index of a coordinate
+   *
+   * @param {Number} width - image width
+   * @param {Number} x - x coordinate
+   * @param {Number} y - y coordinate
+   * @return {Number} index of coordinate in an image buffer
+   */
+  var getIndex = function(width, x, y) {
+    return (width * y + x) << 2;
   };
 
   /**
@@ -49,7 +61,7 @@
     this._png.width = width;
     this._png.height = height;
 
-    this._png.data = buf(width, height);
+    this._png.data = buffer(width, height);
 
     this.forEachPoint(function(x, y, rgba) {
       return { r:0, g:0, b:0, a:255 };
@@ -93,7 +105,7 @@
      * @return {Number} index of coordinate in image buffer
      */
     _getIndex: function(x, y) {
-      return (this._png.width * y + x) << 2;
+      return getIndex(this._png.width, x, y);
     },
 
     /**
@@ -108,11 +120,13 @@
      * @return {Pingy} self
      */
     forEachPoint: function(fn) {
-      for (var y = 0; y < this._png.height; y++) {
-        for (var x = 0; x < this._png.width; x++) {
+      var dims = this.getDimensions();
+
+      for (var y = 0; y < dims.height; y++) {
+        for (var x = 0; x < dims.width; x++) {
 
           var rgba = this.getColor(x, y);
-          var out = fn(x, y, rgba);
+          var out = fn.call(this, x, y, rgba);
 
           this.setColor(x, y, (out || rgba));
         }
@@ -157,6 +171,53 @@
       this._png.data[i + 3] = is_num(rgba.a) ? to_rgba_int(rgba.a): prev.a;
 
       return this.getColor(x, y);
+    },
+
+    /**
+     * Get the dimensions
+     *
+     * @return {Object} width, height
+     */
+    getDimensions: function() {
+      return {
+        width: this._png.width,
+        height: this._png.height
+      };
+    },
+
+    /**
+     * Enlarge by some integer factor
+     *
+     * @param {Number} factor
+     * @return {Pingy} self
+     */
+    scale: function(factor) {
+      factor = clamp(to_int(factor), 1);
+
+      var dims = this.getDimensions();
+      var width = dims.width * factor;
+      var height = dims.height * factor;
+
+      var buf = new buffer(width, height);
+
+      for (var y = 0; y < height; y++) {
+        for (var x = 0; x < width; x++) {
+
+          var i = getIndex(width, x, y);
+          var rgba = this.getColor(to_int(x / factor), to_int(y / factor));
+
+          buf[i + 0] = rgba.r;
+          buf[i + 1] = rgba.g;
+          buf[i + 2] = rgba.b;
+          buf[i + 3] = rgba.a;
+        }
+      }
+
+      this._png.width = width;
+      this._png.height = height;
+      this._png.data = buf;
+
+      return this;
     },
 
     /**
