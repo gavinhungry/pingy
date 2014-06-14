@@ -8,141 +8,163 @@
 (function() {
   'use strict';
 
-
   var PNG = require('pngjs').PNG;
   var Stream = require('stream');
-  var _ = require('lodash');
 
-  var pingy = module.exports;
+  var is_num = function(v) { return !isNaN(v); };
+  var to_int = function(v) { return Math.floor(+v) || 0; };
+  var to_rgba_int = function(v) { return clamp(to_int(v), 0, 255); };
+
+  var clamp = function(val, min, max) {
+    val = is_num(val) ? val: 0;
+    min = is_num(min) ? min : Number.NEGATIVE_INFINITY;
+    max = is_num(max) ? max : Number.POSITIVE_INFINITY;
+
+    return Math.min(Math.max(val, min), max);
+  };
 
   /**
-   * Create a new, blank image
+   * Pingy constructor
    *
-   * @param {Number} width - image width
-   * @param {Number} height - image height
-   * @return {PNG} PNG object
+   * Can be of forms:
+   *   Pingy(width, height) to create a new image
+   *   Pingy(PNG) to create a Pingy object from an existing pngjs object
+   *
+   * @param {Number|PNG} [width] - image width or pngjs object
+   * @param {Number} [height] - image height
+   * @return {Pingy}
    */
-  pingy.create = function(width, height) {
-    var img = new PNG();
-    img.width = width;
-    img.height = height;
+  var Pingy = function(width, height) {
+    width = width || 0;
+    height = height || 0;
 
-    img.data = new Buffer(width * height * 4, 'utf8'); // rgba
+    if (arguments[0] instanceof PNG) {
+      this._png = arguments[0];
+      return;
+    }
 
-    pingy.each_point(img, function(x, y, rgba) {
+    this._png = new PNG();
+    this._png.width = width;
+    this._png.height = height;
+
+    this._png.data = new Buffer(width * height * 4); // RGBA
+
+    this.forEachPoint(function(x, y, rgba) {
       return { r:0, g:0, b:0, a:255 };
     });
-
-    return img;
   };
 
-  /**
-   * Get the buffer index of a coordinate
-   *
-   * @param {PNG} img - input image
-   * @param {Number} x - x coordinate
-   * @param {Number} x - x coordinate
-   * @return {Number} index of coordinate in image buffer
-   */
-  pingy.get_index = function(img, x, y) {
-    return (img.width * y + x) << 2;
-  };
+  Pingy.prototype = {
 
-  /**
-   * Execute a function on each point in an image
-   *
-   * The rgba object passed to the callback will be saved back to the image,
-   * so no need to call `set_rgba` there
-   *
-   * If the callback returns an object, it will be used as the new rgba value
-   *
-   * @param {PNG} img - input image
-   * @param {Function} fn - Function(x, y, rgba) to execute
-   */
-  pingy.each_point = function(img, fn) {
-    for (var x = 0; x < img.width; x++) {
-      for (var y = 0; y < img.height; y++) {
-        var rgba = pingy.get_rgba(img, x, y);
-        var out = fn(x, y, rgba);
+    /**
+     * Get the buffer index of a coordinate
+     *
+     * @private
+     * @param {Number} x - x coordinate
+     * @param {Number} y - y coordinate
+     * @return {Number} index of coordinate in image buffer
+     */
+    _getIndex: function(x, y) {
+      return (this._png.width * y + x) << 2;
+    },
 
-        pingy.set_rgba(img, x, y, (out || rgba));
+    /**
+     * Execute a function on each point in an image
+     *
+     * The rgba object passed to the callback will be saved back to the image,
+     * so no need to call `set_rgba` there
+     *
+     * If the callback returns an object, it will be used as the new rgba value
+     *
+     * @param {Function} fn - Function(x, y, rgba) to execute
+     */
+    forEachPoint: function(fn) {
+      for (var x = 0; x < this._png.width; x++) {
+        for (var y = 0; y < this._png.height; y++) {
+
+          var rgba = this.getColor(x, y);
+          var out = fn(x, y, rgba);
+
+          this.setColor(x, y, (out || rgba));
+        }
       }
+    },
+
+    /**
+     * Get the RGBA value of a coordinate
+     *
+     * @param {Number} x - x coordinate
+     * @param {Number} y - y coordinate
+     * @return {Object} RGBA value
+     */
+    getColor: function(x, y) {
+      var i = this._getIndex(x, y);
+
+      return {
+        r: this._png.data[i + 0],
+        g: this._png.data[i + 1],
+        b: this._png.data[i + 2],
+        a: this._png.data[i + 3]
+      };
+    },
+
+    /**
+     * Set the RGBA value of a coordinate
+     *
+     * @param {Number} x - x coordinate
+     * @param {Number} y - y coordinate
+     * @param {Object} rgba - RGBA value
+     * @return {Object} RGBA value
+     */
+    setColor: function(x, y, rgba) {
+      var i = this._getIndex(x, y);
+      var prev = this.getColor(x, y);
+
+      this._png.data[i + 0] = is_num(rgba.r) ? to_rgba_int(rgba.r): prev.r;
+      this._png.data[i + 1] = is_num(rgba.g) ? to_rgba_int(rgba.g): prev.g;
+      this._png.data[i + 2] = is_num(rgba.b) ? to_rgba_int(rgba.b): prev.b;
+      this._png.data[i + 3] = is_num(rgba.a) ? to_rgba_int(rgba.a): prev.a;
+
+      return this.getColor(x, y);
+    },
+
+    /**
+     * Get the base64 encoding
+     *
+     * @param {Function} [fn] - callback, defaults to console.log
+     */
+    toBase64: function(fn) {
+      fn = fn || console.log.bind(console);
+
+      var buffers = [];
+
+      var base64 = new Stream();
+      base64.readable = base64.writable = true;
+      base64.write = function(data) {
+        buffers.push(data);
+      };
+
+      base64.end = function() {
+        fn(Buffer.concat(buffers).toString('base64'));
+      }
+
+      this._png.pack().pipe(base64);
+    },
+
+    /**
+     * Get the base64 encoding as a data URI
+     *
+     * @param {Function} [fn] - callback, defaults to console.log
+     */
+    toBase64Uri: function(fn) {
+      fn = fn || console.log.bind(console);
+
+      return this.toBase64(function(str) {
+        fn('data:image/png;base64,' + str);
+      });
     }
   };
 
-  /**
-   * Get the RGBA value at a coordinate
-   *
-   * @param {PNG} img - input image
-   * @param {Number} x - x coordinate
-   * @param {Number} x - x coordinate
-   * @return {Object} rgba value
-   */
-  pingy.get_rgba = function(img, x, y) {
-    var i = pingy.get_index(img, x, y);
-
-    return {
-      r: img.data[i],
-      g: img.data[i + 1],
-      b: img.data[i + 2],
-      a: img.data[i + 3]
-    };
-  };
-
-  /**
-   * Set the RGBA value at a coordinate
-   *
-   * @param {PNG} img - input image
-   * @param {Number} x - x coordinate
-   * @param {Number} x - x coordinate
-   * @param {Object} rgba - rgba value
-   * @return {Object} rgba value
-   */
-  pingy.set_rgba = function(img, x, y, rgba) {
-    var i = pingy.get_index(img, x, y);
-
-    var prev = pingy.get_rgba(img, x, y);
-
-    img.data[i] = _.isNumber(rgba.r) ? rgba.r : prev.r;
-    img.data[i + 1] = _.isNumber(rgba.g) ? rgba.g : prev.g;
-    img.data[i + 2] = _.isNumber(rgba.b) ? rgba.b : prev.b;
-    img.data[i + 3] = _.isNumber(rgba.a) ? rgba.a : prev.a;
-
-    return pingy.get_rgba(img, x, y);
-  };
-
-  /**
-   * Get the base64 encoding of an image
-   *
-   * @param {PNG} img - input image
-   * @param {Function} fn - callback
-   */
-  pingy.to_base64 = function(img, fn) {
-    var buffers = [];
-
-    var stream = new Stream();
-    stream.readable = stream.writable = true;
-    stream.write = function(data) {
-      buffers.push(data);
-    }
-
-    stream.end = function() {
-      fn(Buffer.concat(buffers).toString('base64'));
-    }
-
-    img.pack().pipe(stream);
-  };
-
-  /**
-   * Get the base64 encoding of an image as a data URI
-   *
-   * @param {PNG} img - input image
-   * @param {Function} fn - callback
-   */
-  pingy.to_base64_uri = function(img, fn) {
-    return pingy.to_base64(img, function(base64) {
-      fn('data:image/png;base64,' + base64);
-    });
-  };
+  module.exports = Pingy;
 
 })();

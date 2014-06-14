@@ -6,7 +6,6 @@
   "license": "MIT",
 
   "dependencies": {
-    "lodash": "2.4.x",
     "pngjs": "0.4.x"
   }
 }
