@@ -30,7 +30,7 @@
     img.data = new Buffer(width * height * 4, 'utf8'); // rgba
 
     pingy.each_point(img, function(x, y, rgba) {
-      return { r:0, g:255, b:0, a:255 };
+      return { r:0, g:0, b:0, a:255 };
     });
 
     return img;
