@@ -35,15 +35,14 @@ Create a Pingy object from ASCII art:
 
     // whatever *that* is supposed to be ...
     var art = '' +
-      '/------\\n' +
+      'O------O\n' +
       '|      |\n' +
       '| **** |\n' +
       '|      |\n' +
-      '\------/';
+      'O------O';
 
     var img4 = new Pingy.fromAsciiArt(art, {
-      '/': { r: 128, b: 128 },
-      '\': { r: 128, b: 128 },
+      'O': { r: 128, b: 128 },
       '-': { r: 128, b: 128 }
       // characters without mappings get a random color
     });
