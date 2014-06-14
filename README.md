@@ -18,7 +18,7 @@ Creation
 
 Create a new, empty Pingy object of width 64px and height 48px:
 
-    var img1 = new Pingy(64, 48); // default color is black
+    var img = new Pingy(64, 48); // default color is black
 
 Create a Pingy object from an existing pngjs object:
 
@@ -53,7 +53,7 @@ Manipulation
 
 Execute a function on each point of an image:
 
-    img1.forEachPoint(function(x, y, rgba) {
+    img.forEachPoint(function(x, y, rgba) {
       rgba.r = 256; // other RGBA values remain
 
       // optionally, returning an object here overrides the entire RGBA value
@@ -62,22 +62,22 @@ Execute a function on each point of an image:
 
 Get the color at a point:
 
-    img1.getColor(0, 0);
+    img.getColor(0, 0);
     // returns { r:255, g:0, b:0, a:255 };
 
 Set the color at a point by passing a sparse RGBA object:
 
-    img1.setColor(0, 0, { g:255 b:128});
+    img.setColor(0, 0, { g:255 b:128});
     // returns { r:255, g:255, b:128, a:255 };
 
 Get dimensions of the image:
 
-    img1.getDimensions();
+    img.getDimensions();
     // returns { width: 64, height: 48 };
 
 Enlarge an image linearly:
 
-    img1.scale(10);
+    img.scale(10);
 
 
 Utility
@@ -86,14 +86,14 @@ Utility
 Get the [base 64](https://en.wikipedia.org/wiki/Base64) representation of an
 image:
 
-    pingy.getBase64(function(base64) {
+    img.getBase64(function(base64) {
       // base64 string is passed to callback function
     });
 
 Get the base 64 string as a
 [data URI](https://en.wikipedia.org/wiki/Data_URI_scheme):
 
-    pingy.getBase64Uri(function(base64) {
+    img.getBase64Uri(function(base64) {
       // base64 data URI string is passed to callback function
       // data:image/png;base64, [...]
     });
