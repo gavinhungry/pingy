@@ -1,9 +1,22 @@
 {
   "name": "pingy",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "author": "Gavin Lloyd <gavinhungry@gmail.com>",
   "description": "PNG creation and manipulation helper",
   "license": "MIT",
+
+  "keywords": [
+    "png",
+    "image"
+  ],
+
+  "homepage": "https://github.com/gavinhungry/pingy",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/gavinhungry/pingy.git"
+  },
+
+  "main": "pingy.js",
 
   "dependencies": {
     "pngjs": "0.4.x"
