@@ -11,7 +11,7 @@
   var PNG = require('pngjs').PNG;
   var _ = require('lodash');
 
-  var pingy = {};
+  var pingy = module.exports;
 
   /**
    * Create a new, blank image
@@ -20,15 +20,15 @@
    * @param {Number} height - image height
    * @return {PNG} PNG object
    */
-  pingy.blank = function(width, height) {
+  pingy.create = function(width, height) {
     var img = new PNG();
     img.width = width;
     img.height = height;
 
     img.data = new Buffer(width * height * 4); // rgba
 
-    pingy.each_point(img, function(x, y) {
-      pingy.set_rgba(x, y, { r:0, g:0, b:0, a:255 });
+    pingy.each_point(img, function(x, y, rgba) {
+      return { r:0, g:0, b:0, a:255 };
     });
 
     return img;
@@ -37,20 +37,33 @@
   /**
    * Get the buffer index of a coordinate
    *
+   * @param {PNG} img - input image
+   * @param {Number} x - x coordinate
+   * @param {Number} x - x coordinate
+   * @return {Number} index of coordinate in image buffer
    */
   pingy.get_index = function(img, x, y) {
     return (img.width * y + x) << 2;
   };
 
-
   /**
+   * Execute a function on each point in an image
    *
+   * The rgba object passed to the callback will be saved back to the image,
+   * so no need to call `set_rgba` there
    *
+   * If the callback returns an object, it will be used as the new rgba value
+   *
+   * @param {PNG} img - input image
+   * @param {Function} fn - Function(x, y, rgba) to execute
    */
   pingy.each_point = function(img, fn) {
     for (var x = 0; x < img.width; x++) {
       for (var y = 0; y < img.height; y++) {
-        fn(x, y);
+        var rgba = pingy.get_rgba(img, x, y);
+        var out = fn(x, y, rgba);
+
+        pingy.set_rgba(img, x, y, (out || rgba));
       }
     }
   };
@@ -58,10 +71,10 @@
   /**
    * Get the RGBA value at a coordinate
    *
-   *
-   *
-   *
-   *
+   * @param {PNG} img - input image
+   * @param {Number} x - x coordinate
+   * @param {Number} x - x coordinate
+   * @return {Object} rgba value
    */
   pingy.get_rgba = function(img, x, y) {
     var i = pingy.get_index(img, x, y);
@@ -75,8 +88,13 @@
   };
 
   /**
+   * Set the RGBA value at a coordinate
    *
-   *
+   * @param {PNG} img - input image
+   * @param {Number} x - x coordinate
+   * @param {Number} x - x coordinate
+   * @param {Object} rgba - rgba value
+   * @return {Object} rgba value
    */
   pingy.set_rgba = function(img, x, y, rgba) {
     var i = pingy.get_index(img, x, y);
@@ -91,5 +109,4 @@
     return pingy.get_rgba(img, x, y);
   };
 
-  return pingy;
 })();
