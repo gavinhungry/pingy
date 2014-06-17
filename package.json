@@ -1,6 +1,6 @@
 {
   "name": "pingy",
-  "version": "0.1.0-1",
+  "version": "0.2.0",
   "author": "Gavin Lloyd <gavinhungry@gmail.com>",
   "description": "PNG creation and manipulation helper",
   "license": "MIT",
