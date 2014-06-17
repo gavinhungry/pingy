@@ -156,10 +156,8 @@
      * @return {Pingy} self
      */
     forEachPoint: function(fn) {
-      var dims = this.getDimensions();
-
-      for (var y = 0; y < dims.height; y++) {
-        for (var x = 0; x < dims.width; x++) {
+      for (var y = 0; y < this.getHeight(); y++) {
+        for (var x = 0; x < this.getWidth(); x++) {
 
           var rgba = this.getColor(x, y);
           var out = fn.call(this, x, y, rgba);
@@ -210,15 +208,21 @@
     },
 
     /**
-     * Get the dimensions
+     * Get the image width
      *
-     * @return {Object} width, height
+     * @return {Number} image width
      */
-    getDimensions: function() {
-      return {
-        width: this._png.width,
-        height: this._png.height
-      };
+    getWidth: function() {
+      return this._png.width;
+    },
+
+    /**
+     * Get the image height
+     *
+     * @return {Number} image height
+     */
+    getHeight: function() {
+      return this._png.height;
     },
 
     /**
@@ -230,9 +234,8 @@
     scale: function(factor) {
       factor = clamp(to_int(factor), 1);
 
-      var dims = this.getDimensions();
-      var width = dims.width * factor;
-      var height = dims.height * factor;
+      var width = this.getWidth() * factor;
+      var height = this.getHeight() * factor;
 
       var buf = new buffer(width, height);
 
