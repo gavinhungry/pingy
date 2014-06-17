@@ -11,10 +11,10 @@ Installation
 Usage
 =====
 
+    var Pingy = require('pingy');
+
 Creation
 --------
-
-    var Pingy = require('pingy');
 
 Create a new, empty Pingy object of width 64px and height 48px:
 
