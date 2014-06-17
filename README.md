@@ -42,8 +42,8 @@ Create a Pingy object from ASCII art:
       'O------O';
 
     var img4 = new Pingy.fromAsciiArt(art, {
-      'O': { r: 128, b: 128 },
-      '-': { r: 128, b: 128 }
+      'O': { r: 128 },
+      '-': { b: 128 }
       // characters without mappings get a random color
     });
 
@@ -67,13 +67,8 @@ Get the color at a point:
 
 Set the color at a point by passing a sparse RGBA object:
 
-    img.setColor(0, 0, { g:255 b:128});
-    // returns { r:255, g:255, b:128, a:255 };
-
-Get dimensions of the image:
-
-    img.getDimensions();
-    // returns { width: 64, height: 48 };
+    img.setColor(0, 0, { g: 255, b: 128});
+    // returns { r: 255, g: 255, b: 128, a: 255 };
 
 Enlarge an image linearly:
 
@@ -82,6 +77,16 @@ Enlarge an image linearly:
 
 Utility
 -------
+
+Get width of the image:
+
+    img.getWidth();
+    // returns 64
+
+Get height of the image:
+
+    img.getHeight();
+    // returns 48
 
 Get the [base 64](https://en.wikipedia.org/wiki/Base64) representation of an
 image:
