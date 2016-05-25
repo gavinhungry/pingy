@@ -19,6 +19,6 @@
   "main": "pingy.js",
 
   "dependencies": {
-    "pngjs": "0.4.x"
+    "pngjs": "2.3.x"
   }
 }
