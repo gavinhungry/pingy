@@ -17,7 +17,6 @@ var Pingy = require('pingy');
 
 Creation
 --------
-
 Create a new, empty Pingy object of width 64px and height 48px:
 
 ```javascript
@@ -59,7 +58,6 @@ var img4 = new Pingy.fromAsciiArt(art, {
 
 Manipulation
 ------------
-
 Execute a function on each point of an image:
 
 ```javascript
@@ -93,7 +91,6 @@ img.scale(10);
 
 Utility
 -------
-
 Get width of the image:
 
 ```javascript
@@ -112,7 +109,7 @@ Get the [base 64](https://en.wikipedia.org/wiki/Base64) representation of an
 image:
 
 ```javascript
-img.getBase64(function(base64) {
+img.toBase64(function(base64) {
   // base64 string is passed to callback function
 });
 ```
@@ -121,13 +118,12 @@ Get the base 64 string as a
 [data URI](https://en.wikipedia.org/wiki/Data_URI_scheme):
 
 ```javascript
-img.getBase64Uri(function(base64) {
+img.toBase64Uri(function(base64) {
   // base64 data URI string is passed to callback function
   // data:image/png;base64, [...]
 });
 ```
 
 License
-=======
-Released under the terms of the
-[MIT license](http://tldrlegal.com/license/mit-license). See **LICENSE**.
+-------
+This software is released under the terms of the **MIT license**. See `LICENSE`.
